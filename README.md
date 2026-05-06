@@ -7,6 +7,11 @@
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Set the .env
+```
+VITE_API_BASE_URL="http://localhost:8080"
+VITE_SOCKET_URL="ws://localhost:8080/ws"
+
+```
 3. Run the app:
    `npm run dev`
