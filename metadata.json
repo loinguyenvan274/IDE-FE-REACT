@@ -1,0 +1,6 @@
+{
+  "name": "VS Code Terminal IDE",
+  "description": "A polished, interactive terminal component inspired by VS Code, featuring command execution and a professional IDE interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

@@ -1,97 +1,114 @@
-import React, { useState } from "react";
-import TerminalPage from "./TerminalPage";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, ChevronRight, Loader2 } from 'lucide-react';
+import { authService } from '../services/authService';
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [token, setToken] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
+    setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setToken(data.token);
-        setLoggedIn(true);
-        // Token is now in cookie, no need for localStorage
-      } else {
-        setError(data.error || "Đăng nhập thất bại");
-      }
+      await authService.login(username, password);
+      navigate('/workspaces');
     } catch (err) {
-      setError("Lỗi kết nối");
+      setError(err.error || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loggedIn) {
-    return (
-    <div className="h-screen w-screen overflow-auto bg-[#121212]">
-      <TerminalPage />
-    </div>
-  );
-  }
-
   return (
-    <div
-      style={{
-        maxWidth: "400px",
-        margin: "50px auto",
-        padding: "20px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-      }}
-    >
-      <h2>Đăng nhập</h2>
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-          />
+    <div className="min-h-screen w-full flex bg-[#0d0d0d] text-white font-sans overflow-hidden">
+      {/* Left Side - Auth Form */}
+      <div className="w-full lg:w-1/2 flex flex-col p-8 relative z-10">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-24">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded bg-white flex items-center justify-center">
+              <Shield size={18} className="text-[#0d0d0d]" />
+            </div>
+          </div>
+          <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-lg flex items-center space-x-2 text-xs text-gray-400">
+            <span>You are signing into</span>
+            <span className="text-white font-medium flex items-center">
+              <Shield size={12} className="mr-1" /> VulnSight
+            </span>
+            <ChevronRight size={12} className="rotate-90" />
+          </div>
         </div>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-          />
+
+        {/* Form Container */}
+        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full text-center space-y-10">
+          <h1 className="text-3xl font-medium tracking-tight">Log into your account</h1>
+          
+          <form className="space-y-4" onSubmit={handleLogin}>
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs py-3 px-4 rounded-xl text-left">
+                {error}
+              </div>
+            )}
+            <div className="space-y-1 text-left">
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full h-12 bg-transparent border border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:ring-1 focus:ring-white transition-all placeholder:text-gray-600"
+                required
+              />
+            </div>
+            <div className="space-y-1 text-left">
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full h-12 bg-transparent border border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:ring-1 focus:ring-white transition-all placeholder:text-gray-600"
+                required
+              />
+            </div>
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-all text-sm mt-4 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? <Loader2 className="animate-spin" size={18} /> : 'Log in'}
+            </button>
+          </form>
+
+          <div className="text-sm text-gray-500">
+            Don't have an account? <button onClick={() => navigate('/register')} className="text-white hover:underline font-medium">Sign up</button>
+          </div>
         </div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          Đăng nhập
-        </button>
-      </form>
-      {token && <p>Token: {token}</p>}
+
+        {/* Footer */}
+        <div className="mt-auto text-center py-4">
+          <p className="text-[10px] text-gray-600">
+            By continuing, you agree to VulnSight's <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
+          </p>
+        </div>
+      </div>
+
+      {/* Right Side - Visual / Brand Area */}
+      <div className="hidden lg:block lg:w-1/2 bg-[#050505] relative overflow-hidden border-l border-white/5">
+        {/* Large Decorative Icon */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full flex items-center justify-center opacity-10">
+          <Shield size={600} strokeWidth={0.5} />
+        </div>
+        
+        {/* Gradient / Spotlight Effect */}
+        <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white/5 to-transparent skew-x-[-20deg] origin-top translate-x-12 blur-3xl opacity-30" />
+        <div className="absolute right-0 bottom-0 h-1/2 w-full bg-gradient-to-t from-blue-500/10 to-transparent blur-3xl" />
+      </div>
     </div>
   );
 };
